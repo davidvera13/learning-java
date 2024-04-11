@@ -3,7 +3,7 @@ package io.warehouse13.learning;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-public class Main {
+public class BigDecimalMain {
     public static void main(String[] args) {
         double policyAmount = 100_000_000;
         int beneficiaries = 3;

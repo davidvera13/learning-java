@@ -1,47 +1,15 @@
 package io.warehouse13.learning;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
-public class BigDecimalMain {
+public class BigDecimalMethodsMain {
     public static void main(String[] args) {
-        double policyAmount = 100_000_000;
-        int beneficiaries = 3;
-        float percentageFloat = 1.0f / beneficiaries;
-        double percentage = 1.0 / beneficiaries;
+        double[] doubles = {15.456, 8, 10000.000001, .125};
+        BigDecimal[] bds = new BigDecimal[doubles.length];
 
-        // RESULTS ARE DIFFERENT
-        System.out.printf("Payout = %,.2f%n", policyAmount * percentageFloat);
-        System.out.printf("Payout = %,.2f%n", policyAmount * percentage);
-
-        double totalUsingFloat = policyAmount - ((policyAmount * percentageFloat) * beneficiaries);
-        double total = policyAmount - ((policyAmount * percentage) * beneficiaries);
-
-        // here results are also different
-        System.out.printf("TotalUsingFloat: %,.2f%n", totalUsingFloat);
-        System.out.printf("Total: %,.2f%n", total);
-
-        // big decimal are required for financial calculations
-        String[] tests = {"15.456", "8", "10000.000001", ".123"};
-        BigDecimal[] bds = new BigDecimal[tests.length];
-        Arrays.setAll(bds, i -> new BigDecimal(tests[i]));
-
-        System.out.println("----------------------------------------------------");
-        System.out.printf("%-14s %-15s %-8s %s%n", "Value", "Unscaled Value", "Scale",
-                "Precision");
-        System.out.println("----------------------------------------------------");
-        for (var bd : bds) {
-            System.out.printf("%-15s %-15d %-8d %d %n",
-                    bd, bd.unscaledValue(), bd.scale(), bd.precision());
-        }
-        System.out.println("----------------------------------------------------");
-        System.out.println("\n");
-
-
-
-        // result output is weird. it is better to use string instead
-        // Unpredictable 'new BigDecimal()' call
-        double[] doubles = {15.456, 8, 10000.000001, .123};
         // Arrays.setAll(bds, i -> new BigDecimal(doubles[i]));
         Arrays.setAll(bds, i -> BigDecimal.valueOf(doubles[i]));
 
@@ -52,21 +20,57 @@ public class BigDecimalMain {
         for (var bd : bds) {
             System.out.printf("%-15s %-15d %-8d %d %n",
                     bd, bd.unscaledValue(), bd.scale(), bd.precision());
+
+            bd = bd.setScale(2, RoundingMode.HALF_UP);
+            System.out.printf("%-15s %-15d %-8d %d %n",
+                    bd, bd.unscaledValue(), bd.scale(), bd.precision());
         }
         System.out.println("----------------------------------------------------");
-        System.out.println("\n");
 
-        // some issue: output is different: string constructor is more accurate
-        BigDecimal test1 = new BigDecimal("1.1111122222333334444455555");
-        BigDecimal test2 = BigDecimal.valueOf(1.1111122222333334444455555);
-        System.out.println("----------------------------------------------------");
-        System.out.printf("%-30s %-30s %-8s %s%n", "Value", "Unscaled Value", "Scale",
-                "Precision");
-        System.out.println("----------------------------------------------------");
-        System.out.printf("%-30s %-30d %-8d %d %n",
-                test1, test1.unscaledValue(), test1.scale(), test1.precision());
-        System.out.printf("%-30s %-30d %-8d %d %n",
-                test2, test2.unscaledValue(), test2.scale(), test2.precision());
+        // do calculation
+        //BigDecimal policyPayout = new BigDecimal("100_000_000");
+        BigDecimal policyPayout = new BigDecimal("100000000.00");
+        System.out.printf("%-15s %-15d %-8d %d %n",
+                policyPayout, policyPayout.unscaledValue(), policyPayout.scale(), policyPayout.precision());
 
+        policyPayout = new BigDecimal("100e6");
+        System.out.printf("%-15s %-15d %-8d %d %n",
+                policyPayout, policyPayout.unscaledValue(), policyPayout.scale(), policyPayout.precision());
+
+        // DIVISION
+        System.out.println("Division");
+        int beneficiaries = 3;
+        System.out.println("----------------------------------------------------");
+        BigDecimal percent32 = BigDecimal.ONE.divide(BigDecimal.valueOf(beneficiaries), MathContext.DECIMAL32);
+        System.out.println(percent32);
+        BigDecimal percent64 = BigDecimal.ONE.divide(BigDecimal.valueOf(beneficiaries), MathContext.DECIMAL64);
+        System.out.println(percent64);
+        BigDecimal percent128 = BigDecimal.ONE.divide(BigDecimal.valueOf(beneficiaries), MathContext.DECIMAL128);
+        System.out.println(percent128);
+
+        BigDecimal percentCustom60 = BigDecimal.ONE.divide(BigDecimal.valueOf(beneficiaries),
+                new MathContext(60, RoundingMode.UP));
+        System.out.println(percentCustom60);
+
+        // MULTIPLY
+        System.out.println("Multiplication");
+        BigDecimal checkAmount = policyPayout.multiply(percentCustom60);
+        System.out.printf("%.2f%n", checkAmount);
+        System.out.printf("%-15s %-15d %-8d %d %n",
+                checkAmount, checkAmount.unscaledValue(), checkAmount.scale(), checkAmount.precision());
+        // using rounding mode
+        checkAmount = checkAmount.setScale(2, RoundingMode.HALF_UP);
+        System.out.printf("%-15s %-15d %-8d %d %n",
+                checkAmount, checkAmount.unscaledValue(), checkAmount.scale(), checkAmount.precision());
+
+        // check sum
+        System.out.println("----------------------------------------------------");
+        BigDecimal totalChecksAmount = checkAmount.multiply(BigDecimal.valueOf(beneficiaries));
+        System.out.printf("Combined: %.2f%n", totalChecksAmount);
+        System.out.println("Remaining = " + policyPayout.subtract(totalChecksAmount));
+
+
+        System.out.printf("%-15s %-15d %-8d %d %n",
+                totalChecksAmount, totalChecksAmount.unscaledValue(), totalChecksAmount.scale(), totalChecksAmount.precision());
     }
 }
