@@ -1,0 +1,3 @@
+						Hello world
+						I writing some data
+						writing file using path and Files
